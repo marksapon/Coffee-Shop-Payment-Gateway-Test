@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, Loader2, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { createPaymentSession } from "@/lib/api";
+import { createPaymentSessionViaBackend } from "@/lib/backend-api";
 import { showToast } from "@/hooks/useToast";
 import CartItemRow from "./CartItemRow";
 import CartSummary from "./CartSummary";
@@ -18,12 +19,16 @@ export default function CartDrawer() {
 
     setIsCheckingOut(true);
     try {
-      const { payment_link_url } = await createPaymentSession(
-        items,
-        totals.grandTotal,
-      );
+      let redirectUrl: string;
+      if (process.env.NEXT_PUBLIC_PAYMENT_GATEWAY === "backend") {
+        const res = await createPaymentSessionViaBackend(items, totals.grandTotal);
+        redirectUrl = res.payment_url;
+      } else {
+        const res = await createPaymentSession(items, totals.grandTotal);
+        redirectUrl = res.payment_link_url;
+      }
       clear();
-      window.location.href = payment_link_url;
+      window.location.href = redirectUrl;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to create payment session";
