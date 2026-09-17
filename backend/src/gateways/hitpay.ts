@@ -27,12 +27,12 @@ export class HitpayGateway implements PaymentGateway {
       purpose: data.description,
       reference_number: data.reference_id,
       redirect_url: data.success_return_url,
-      payment_methods: ["union_bank_ph"],
+      payment_methods: ["paynow_online"],
     };
 
     console.log("HitPay payload:", payload);
 
-    const response = await fetch(`${this.apiUrl}/payment-requests`, {
+    const response = await fetch(`https://api.sandbox.hit-pay.com/v1/payment-requests`, {
       method: "POST",
       headers: {
         "X-BUSINESS-API-KEY": this.apiKey,
