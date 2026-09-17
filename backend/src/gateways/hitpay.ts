@@ -9,7 +9,6 @@ interface HitpayConfig {
   apiUrl: string;
 }
 
-// ponytail: skeleton — fill in when Hitpay integration is needed
 export class HitpayGateway implements PaymentGateway {
   private apiKey: string;
   private apiUrl: string;
@@ -23,40 +22,36 @@ export class HitpayGateway implements PaymentGateway {
     data: PaymentSessionRequest,
   ): Promise<PaymentSessionResponse> {
     const payload = {
-      amount: data.amount,
-      currency: data.currency,
-      description: data.description,
-      reference_id: data.reference_id,
+      amount: (data.amount / 100).toFixed(2),
+      currency: "PHP", //data.currency || "PHP",
+      purpose: data.description,
+      reference_number: data.reference_id,
       redirect_url: data.success_return_url,
-      cancel_url: data.cancel_return_url,
-      metadata: {
-        items: data.items.map((i) => ({
-          name: i.name,
-          quantity: i.quantity,
-          price: i.price,
-        })),
-      },
+      payment_methods: ["union_bank_ph"],
     };
+
+    console.log("HitPay payload:", payload);
 
     const response = await fetch(`${this.apiUrl}/payment-requests`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
+        "X-BUSINESS-API-KEY": this.apiKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.message || "Hitpay payment request failed");
+      const text = await response.text();
+      console.error("HitPay API error:", response.status, text);
+      throw new Error(`Hitpay payment request failed (${response.status}): ${text}`);
     }
 
     const result = await response.json();
 
     return {
       session_id: result.id,
-      payment_url: result.payment_url,
+      payment_url: result.url,
       status: result.status,
     };
   }

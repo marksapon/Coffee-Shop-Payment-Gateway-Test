@@ -1,5 +1,8 @@
 import express, { type Express, type Request, type Response } from "express";
 import { getPaymentGateway } from "./gateways/index.ts";
+import { config } from "dotenv";
+
+config(); // Load environment variables from .env file
 
 const app: Express = express();
 
@@ -14,7 +17,7 @@ app.use((req: Request, res: Response, next) => {
   next();
 });
 
-const port = process.env.PORT || 3210;
+const port = process.env.PORT || 3310;
 
 app.get("/", (_req: Request, res: Response) => {
   res.send("Coffee Shop Payment API");
